@@ -6,14 +6,16 @@ rem Settings:
 rem ENCODER Path to your ffmpeg
 rem THREADS Amount of CPU cores/threads to use
 rem RESOLUTION Video screen size to use https://ffmpeg.org/ffmpeg-utils.html#Video-size
-rem VIDEOBITRATE Target bitrate
+rem MAXVIDEOBITRATE Maximum target bitrate
+rem MINVIDEOBITRATE Minimum bitrate (below that script will quit)
+rem AUDIOBITRATE Audio bitrate
 rem FILEPREFIX Optional prefix to append to the output filename (ex.: 20180501_PREFIX.)webm
 rem PRIORITY Windows process priority (low normal high realtime abovenormal  belownormal) https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-xp/bb491005(v=technet.10)
 rem VIDEOCODEC Video encoder https://www.ffmpeg.org/ffmpeg-codecs.html#Video-Encoders
 rem AUDIOCODEC Audio encoder https://www.ffmpeg.org/ffmpeg-codecs.html#Audio-Encoders
 set ENCODER=ffmpeg.exe
 set PROBER=ffprobe.exe
-set THREADS=2
+set THREADS=%NUMBER_OF_PROCESSORS%
 set RESOLUTION=hd720
 set MAXVIDEOBITRATE=1024
 set MINVIDEOBITRATE=128
