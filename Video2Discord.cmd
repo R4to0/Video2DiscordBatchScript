@@ -2,13 +2,13 @@
 
 TITLE Discord WebM script by Rafael "R4to0" Alves
 
-rem Settings
+rem Settings:
 rem ENCODER Path to your ffmpeg
 rem THREADS Amount of CPU cores/threads to use
 rem RESOLUTION Video screen size to use https://ffmpeg.org/ffmpeg-utils.html#Video-size
 rem VIDEOBITRATE Target bitrate
 rem FILEPREFIX Optional prefix to append to the output filename (ex.: 20180501_PREFIX.)webm
-rem PRIORITY Windows processo priority (low normal high realtime abovenormal  belownormal) https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-xp/bb491005(v=technet.10)
+rem PRIORITY Windows process priority (low normal high realtime abovenormal  belownormal) https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-xp/bb491005(v=technet.10)
 rem VIDEOCODEC Video encoder https://www.ffmpeg.org/ffmpeg-codecs.html#Video-Encoders
 rem AUDIOCODEC Audio encoder https://www.ffmpeg.org/ffmpeg-codecs.html#Audio-Encoders
 set ENCODER=ffmpeg.exe
@@ -82,9 +82,13 @@ rem -strict Bypass encoding standards
 rem -f Force format
 rem %~d1 System Drive letter, %~p1 file path, %~n1 file name without extension
 :start
-start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 1 -deadline best -an -threads %THREADS% -s %RESOLUTION% -strict -2  -f webm NUL && ^
-start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 2 -deadline best -c:a %AUDIOCODEC% -threads %THREADS% -s %RESOLUTION% -b:a %AUDIOBITRATE%k -crf 0 -strict -2  "%~d1%~p1%~n1"%FILEPREFIX%.webm
+start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 1 -deadline good -an -threads %THREADS% -s %RESOLUTION% -strict -2  -f webm NUL && ^
+start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 2 -deadline good -c:a %AUDIOCODEC% -threads %THREADS% -s %RESOLUTION% -b:a %AUDIOBITRATE%k -strict -2  "%~d1%~p1%~n1"%FILEPREFIX%.webm
 del "%~d1%~p1%ffmpeg2pass-0.log"
+
+rem Switch to next file input if exists
+shift
+popd
 
 :exitthis
 pause
