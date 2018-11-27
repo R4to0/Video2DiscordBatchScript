@@ -47,8 +47,8 @@ pushd %~pd1
 rem If input is empty, go to end of file (ends script)
 if [%1==[ goto :EOF
 
-rem Discord profile type
-echo Select profile type:
+rem Size target
+echo Select target max size:
 echo 1. Normal (up to 8MB)
 echo 2. Nitro (up to 50MB)
 echo.
