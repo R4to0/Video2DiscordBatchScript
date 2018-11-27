@@ -11,7 +11,7 @@ rem Save this as Video2Discord.cmd and drag drop your video files over Video2Dis
 
 rem Updates: https://gist.github.com/R4to0/29dd1762e4535dcbfe2be514631e656f
 
-rem Didn't wanted to use this but i had to do
+rem Didn't wanted to use this but I had to do
 rem Use set function !variables! inside if/else
 setlocal enabledelayedexpansion
 
@@ -86,7 +86,6 @@ if %StartPosition% GEQ 0 (
     ) else (
         for /f "delims=" %%i in ('%PROBER% -i %1 -show_entries format^=duration -v quiet -of csv^="p=0"') do set "TOTALSECS=%%i"
         set /a "VIDEOSECS=TOTALSECS-(((1%StartPosition::=-100)*60+1%-100)"
-        pause
     )
 
 ) else (
