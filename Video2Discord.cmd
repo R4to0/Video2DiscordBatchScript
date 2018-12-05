@@ -128,8 +128,8 @@ rem -strict Bypass encoding standards
 rem -f Force format
 rem %~d1 System Drive letter, %~p1 file path, %~n1 file name without extension
 :start
-start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va %STARTTIME% -i %1 %ENDTIME% -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 1 -deadline good -an -threads %THREADS% -s %RESOLUTION% -strict -2  -f webm NUL && ^
-start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va %STARTTIME% -i %1 %ENDTIME% -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 2 -deadline good -c:a %AUDIOCODEC% -threads %THREADS% -s %RESOLUTION% -b:a %AUDIOBITRATE%k -strict -2  "%~d1%~p1%~n1"%FILEPREFIX%.webm
+start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 1 -deadline good -an -threads %THREADS% -s %RESOLUTION% -strict -2  -f webm NUL && ^
+start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 2 -deadline good -c:a %AUDIOCODEC% -threads %THREADS% -s %RESOLUTION% -b:a %AUDIOBITRATE%k -strict -2 "%~d1%~p1%~n1"%FILEPREFIX%.webm
 del "%~d1%~p1%ffmpeg2pass-0.log"
 
 rem Switch to next file input if exists
