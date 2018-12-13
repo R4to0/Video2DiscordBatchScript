@@ -9,6 +9,13 @@ rem Make sure you have ffmpeg installed and added to the PATH environment
 rem (Optionally you can define path manually in the variables below)
 rem Save this as Video2Discord.cmd and drag drop your video files over Video2Discord.cmd
 
+rem NOTE:
+rem The EXACT file size allowed by Discord for free accounts is 8388213 bytes.
+rem For some reason, Discord adds 395 bytes of metadata during upload.
+rem You can check it in developer console by pressing CTRL+SHIFT+I
+rem 8388608 - 395 = 8388213
+rem Not tested with Nitro limits (52428800 for 50MB without subtracting extra metadata)
+
 rem Updates: https://gist.github.com/R4to0/29dd1762e4535dcbfe2be514631e656f
 
 rem Didn't wanted to use this but I had to do
@@ -36,7 +43,7 @@ set RESOLUTION=hd720
 set MAXVIDEOBITRATE=1024
 set MINVIDEOBITRATE=128
 set AUDIOBITRATE=128
-set FILEPREFIX=_r4v2d
+set FILEPREFIX=
 set PRIORITY=low
 set VIDEOCODEC=libvpx-vp9
 set AUDIOCODEC=libopus
@@ -54,8 +61,8 @@ echo 2. Nitro (up to 50MB)
 echo.
 :proftype
 set /p "acctype=Your choice? "
-if %acctype% EQU 1 set BASECALC=64000
-if %acctype% EQU 2 set BASECALC=384000
+if %acctype% EQU 1 set BASECALC=8388213
+if %acctype% EQU 2 set BASECALC=52428800
 if %acctype% LEQ 0 (
     echo Invalid option specified. Try again...
     goto :proftype
@@ -93,12 +100,11 @@ if %StartPosition% GEQ 0 (
     for /f "delims=" %%i in ('%PROBER% -i %1 -show_entries format^=duration -v quiet -of csv^="p=0"') do set "VIDEOSECS=%%i"
 )
 
-rem Calculate bitrate based on length and profile type
-rem If result is higher than default, it will use defaultbitrate
-rem https://www.etdofresh.com/ffmpeg-your-videos-to-8mb-in-windows-for-discord-use/
-set /a "totalBitrate=%BASECALC%/VIDEOSECS"
-set overheadBitrate=0
-set /a "VIDEOBITRATE=totalBitrate-AUDIOBITRATE-overheadBitrate"
+rem Calculate bitrate based on length and target file size
+rem If result is higher than %MAXVIDEOBITRATE%, it will use it instead of result
+rem Formula:
+rem videobitrate = ( ( size in bytes / 128 ) / seconds ) - audiobitrate
+set /a "VIDEOBITRATE=((BASECALC/128)/VIDEOSECS)-AUDIOBITRATE"
 if %VIDEOBITRATE% LSS %MINVIDEOBITRATE% (
     echo POTATO QUALITY ERROR: Video length too long for specified type or invalid! %VIDEOBITRATE%
     goto :exitthis
