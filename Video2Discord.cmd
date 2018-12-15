@@ -45,7 +45,7 @@ rem AUDIOCODEC Audio encoder https://www.ffmpeg.org/ffmpeg-codecs.html#Audio-Enc
 set ENCODER=ffmpeg.exe
 set PROBER=ffprobe.exe
 set THREADS=%NUMBER_OF_PROCESSORS%
-set RESOLUTION=hd720
+rem set RESOLUTION=hd720
 set MAXVIDEOBITRATE=1024
 set MINVIDEOBITRATE=128
 set AUDIOBITRATE=128
@@ -61,7 +61,7 @@ rem If input is empty, go to end of file (ends script)
 if [%1==[ goto :EOF
 
 rem Size target
-echo Select target max size:
+echo Target max size:
 echo 1. Normal (up to 8MB)
 echo 2. Nitro (up to 50MB)
 echo.
@@ -89,7 +89,7 @@ title %BASETITLE% (%PRL%)
 
 rem Codec
 rem TODO: Tweak x264 encoder due to overhead
-echo Select codec:
+echo Codec:
 echo 1. WebM (VP9 + opus, recommended but slow encoding, CPU only)
 echo 2. MP4 (x264 + aac, a bit faster but less efficient, CPU only)
 rem echo 3. AMD GPU encoding MP4 (h264 + aac, VCE cards only, faster, inefficient)
@@ -132,6 +132,27 @@ if %cdctyp% GEQ 3 (
 echo.
 
 title %BASETITLE% (%PRL% / %OUTPUTEXT%)
+
+rem Resolution
+echo Resolution:
+echo -1. Same as origin file
+echo 1. 240p (432x240)
+echo 2. 360p (640x360)
+echo 3. 480p (852x480)
+echo 4. 720p (1280x720)
+echo 5. 1080p (1920x1080)
+:ressel
+set /p "restyp=Your choice? "
+if %restyp% LEQ 0 set "RESOLUTION="
+if %restyp% EQU 1 set "RESOLUTION=-s fwqvga"
+if %restyp% EQU 2 set "RESOLUTION=-s nhd"
+if %restyp% EQU 3 set "RESOLUTION=-s hd480"
+if %restyp% EQU 4 set "RESOLUTION=-s hd720"
+if %restyp% EQU 5 set "RESOLUTION=-s hd1080"
+if %restyp% GEQ 6 (
+    echo Invalid option specified. Try again...
+    goto :ressel
+)
 
 rem Shitty crop feature (NO USER INPUT VALIDATION!)
 rem Setting startposition to -1 will skip this completely and use total video time
@@ -197,8 +218,8 @@ rem -strict Bypass encoding standards
 rem -f Force format
 rem %~d1 System Drive letter, %~p1 file path, %~n1 file name without extension
 :start
-start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 1 %EXTRAENCPARAMS% -an -threads %THREADS% -s %RESOLUTION% -strict -2  -f %OUTPUTEXT% NUL && ^
-start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k -pass 2 %EXTRAENCPARAMS% -c:a %AUDIOCODEC% -threads %THREADS% -s %RESOLUTION% -b:a %AUDIOBITRATE%k -strict -2 "%~d1%~p1%~n1"%FILEPREFIX%.%OUTPUTEXT%
+start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 1 %EXTRAENCPARAMS% -an -threads %THREADS% -strict -2  -f %OUTPUTEXT% NUL && ^
+start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 2 %EXTRAENCPARAMS% -c:a %AUDIOCODEC% -threads %THREADS% -b:a %AUDIOBITRATE%k -strict -2 "%~d1%~p1%~n1"%FILEPREFIX%.%OUTPUTEXT%
 del "%~d1%~p1%ffmpeg2pass-0.log"
 if "%VIDEOCODEC%" == "libx264" del "%~d1%~p1%ffmpeg2pass-0.log.mbtree"
 
