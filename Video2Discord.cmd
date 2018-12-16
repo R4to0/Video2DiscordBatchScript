@@ -88,7 +88,7 @@ echo.
 title %BASETITLE% (%PRL%)
 
 rem Codec
-rem TODO: Tweak x264 encoder due to overhead
+rem TESTING: 3% of 8388213 bytes for overhead in x264
 echo Codec:
 echo 1. WebM (VP9 + opus, recommended but slow encoding, CPU only)
 echo 2. MP4 (x264 + aac, a bit faster but less efficient, CPU only)
@@ -106,20 +106,23 @@ if %cdctyp% EQU 1 (
 if %cdctyp% EQU 2 (
     set "VIDEOCODEC=libx264"
     set "AUDIOCODEC=aac"
-    set "EXTRAENCPARAMS=-preset veryslow -movflags +faststart"
+    set "EXTRAENCPARAMS=-profile:v high -pix_fmt yuv420p -preset veryslow -movflags +faststart"
     set "OUTPUTEXT=mp4"
+    set "OVERHEAD=251646"
 )
 rem if %cdctyp% EQU 3 (
 rem     set "VIDEOCODEC=h264_amf"
 rem     set "AUDIOCODEC=aac"
 rem     set "EXTRAENCPARAMS=-profile:v high -quality quality -coder cabac -rc cbr -movflags +faststart"
 rem     set "OUTPUTEXT=mp4"
+rem     set "OVERHEAD=251646"
 rem )
 rem if %cdctyp% EQU 4 (
 rem     set "VIDEOCODEC=h264_nvenc"
 rem     set "AUDIOCODEC=aac"
 rem     set "EXTRAENCPARAMS=-movflags +faststart"
 rem     set "OUTPUTEXT=mp4"
+rem     set "OVERHEAD=251646"
 rem )
 if %cdctyp% LEQ 0 (
     echo Invalid option specified. Try again...
@@ -185,7 +188,7 @@ rem Calculate bitrate based on length and target file size
 rem If result is higher than %MAXVIDEOBITRATE%, it will use it instead of result
 rem Formula:
 rem videobitrate = ( ( size in bytes / 128 ) / seconds ) - audiobitrate
-set /a "VIDEOBITRATE=((BASECALC/128)/VIDEOSECS)-AUDIOBITRATE"
+set /a "VIDEOBITRATE=(((BASECALC-OVERHEAD)/128)/VIDEOSECS)-AUDIOBITRATE"
 if %VIDEOBITRATE% LSS %MINVIDEOBITRATE% (
     echo POTATO QUALITY ERROR: Video length too long for specified type or invalid! %VIDEOBITRATE%
     goto :exitthis
