@@ -14,11 +14,11 @@ rem (Optionally you can define path manually in the variables below)
 rem Save this as Video2Discord.cmd and drag drop your video files over Video2Discord.cmd
 
 rem NOTE:
-rem The EXACT file size allowed by Discord for free accounts is 8388213 bytes.
-rem For some reason, Discord adds 395 bytes of metadata during upload.
+rem The EXACT file size allowed by Discord for free accounts is 8388213 bytes and 52428310 bytes for Nitro.
+rem For some reason, Discord adds 395 bytes of metadata during upload. For Nitro the extra metadata size is 490 bytes.
 rem You can check it in developer console by pressing CTRL+SHIFT+I
-rem 8388608 - 395 = 8388213
-rem Not tested with Nitro limits (52428800 for 50MB without subtracting extra metadata)
+rem 8388608 - 395 = 8388213 bytes
+rem 52428800 - 490 = 52428310 bytes
 
 rem Updates: https://gist.github.com/R4to0/29dd1762e4535dcbfe2be514631e656f
 
@@ -48,7 +48,7 @@ set THREADS=%NUMBER_OF_PROCESSORS%
 rem set RESOLUTION=hd720
 set MAXVIDEOBITRATE=1024
 set MINVIDEOBITRATE=128
-set AUDIOBITRATE=128
+rem set AUDIOBITRATE=128
 set FILEPREFIX=v2d
 set PRIORITY=low
 rem set VIDEOCODEC=libvpx-vp9
@@ -72,7 +72,7 @@ if %acctype% EQU 1 (
     set PRL=Normal 8MB
 )
 if %acctype% EQU 2 (
-    set BASECALC=52428800
+    set BASECALC=52428310
     set PRL=Nitro 50MB
 )
 if %acctype% LEQ 0 (
@@ -92,7 +92,7 @@ rem TESTING: 3% of 8388213 bytes for overhead in x264
 echo Codec:
 echo 1. WebM (VP9 + opus, recommended but slow encoding, CPU only)
 echo 2. MP4 (x264 + aac, a bit faster but less efficient, CPU only)
-rem echo 3. AMD GPU encoding MP4 (h264 + aac, VCE cards only, faster, inefficient)
+echo 3. AMD GPU encoding MP4 (h264 + aac, VCE cards only, faster, inefficient)
 rem echo 4. NVIDIA GPU encoding MP4 (NVENC cards only, not tested)
 echo.
 :codecsel
@@ -106,17 +106,17 @@ if %cdctyp% EQU 1 (
 if %cdctyp% EQU 2 (
     set "VIDEOCODEC=libx264"
     set "AUDIOCODEC=aac"
-    set "EXTRAENCPARAMS=-profile:v high -pix_fmt yuv420p -preset veryslow -movflags +faststart"
+    set "EXTRAENCPARAMS=-profile:v high -level 4.1 -pix_fmt yuv420p -preset veryslow -movflags +faststart"
     set "OUTPUTEXT=mp4"
     set "OVERHEAD=251646"
 )
-rem if %cdctyp% EQU 3 (
-rem     set "VIDEOCODEC=h264_amf"
-rem     set "AUDIOCODEC=aac"
-rem     set "EXTRAENCPARAMS=-profile:v high -quality quality -coder cabac -rc cbr -movflags +faststart"
-rem     set "OUTPUTEXT=mp4"
-rem     set "OVERHEAD=251646"
-rem )
+if %cdctyp% EQU 3 (
+    set "VIDEOCODEC=h264_amf"
+    set "AUDIOCODEC=aac"
+    set "EXTRAENCPARAMS=-profile:v high -level 4.1 -pix_fmt yuv420p -quality quality -coder cabac -rc cbr -movflags +faststart"
+    set "OUTPUTEXT=mp4"
+    set "OVERHEAD=251646"
+)
 rem if %cdctyp% EQU 4 (
 rem     set "VIDEOCODEC=h264_nvenc"
 rem     set "AUDIOCODEC=aac"
@@ -128,7 +128,7 @@ if %cdctyp% LEQ 0 (
     echo Invalid option specified. Try again...
     goto :codecsel
 )
-if %cdctyp% GEQ 3 (
+if %cdctyp% GEQ 4 (
     echo Invalid option specified. Try again...
     goto :codecsel
 )
@@ -138,20 +138,40 @@ title %BASETITLE% (%PRL% / %OUTPUTEXT%)
 
 rem Resolution
 echo Resolution:
-echo -1. Same as origin file
-echo 1. 240p (432x240)
-echo 2. 360p (640x360)
-echo 3. 480p (852x480)
-echo 4. 720p (1280x720)
-echo 5. 1080p (1920x1080)
+echo -1. Same as origin file, audio 128kbps
+echo 1. 240p (432x240), audio 32kbps - POTATO MODE
+echo 2. 360p (640x360), audio 64kbps
+echo 3. 480p (852x480), audio 96kbps
+echo 4. 720p (1280x720), audio 128kbps
+echo 5. 1080p (1920x1080), audio 128kbps
 :ressel
 set /p "restyp=Your choice? "
-if %restyp% LEQ 0 set "RESOLUTION="
-if %restyp% EQU 1 set "RESOLUTION=-s fwqvga"
-if %restyp% EQU 2 set "RESOLUTION=-s nhd"
-if %restyp% EQU 3 set "RESOLUTION=-s hd480"
-if %restyp% EQU 4 set "RESOLUTION=-s hd720"
-if %restyp% EQU 5 set "RESOLUTION=-s hd1080"
+if %restyp% LEQ 0 (
+    set "RESOLUTION="
+    set "AUDIOBITRATE=128"
+)
+if %restyp% EQU 1 (
+    set "RESOLUTION=-s fwqvga"
+    set AUDIOBITRATE=32
+    set MINVIDEOBITRATE=32
+    set "EXTRAPARAMS=-ac 1"
+)
+if %restyp% EQU 2 (
+    set "RESOLUTION=-s nhd"
+    set AUDIOBITRATE=64
+)
+if %restyp% EQU 3 (
+    set "RESOLUTION=-s hd480"
+    set AUDIOBITRATE=96
+)
+if %restyp% EQU 4 (
+    set "RESOLUTION=-s hd720"
+    set AUDIOBITRATE=128
+)
+if %restyp% EQU 5 (
+    set "RESOLUTION=-s hd1080"
+    set AUDIOBITRATE=128
+)
 if %restyp% GEQ 6 (
     echo Invalid option specified. Try again...
     goto :ressel
@@ -221,8 +241,8 @@ rem -strict Bypass encoding standards
 rem -f Force format
 rem %~d1 System Drive letter, %~p1 file path, %~n1 file name without extension
 :start
-start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 1 %EXTRAENCPARAMS% -an -threads %THREADS% -strict -2  -f %OUTPUTEXT% NUL && ^
-start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 2 %EXTRAENCPARAMS% -c:a %AUDIOCODEC% -threads %THREADS% -b:a %AUDIOBITRATE%k -strict -2 "%~d1%~p1%~n1"%FILEPREFIX%.%OUTPUTEXT%
+start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -map_metadata -1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 1 %EXTRAENCPARAMS% -an -threads %THREADS% -strict -2  -f %OUTPUTEXT% NUL && ^
+start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -map_metadata -1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 2 %EXTRAENCPARAMS% -c:a %AUDIOCODEC% -threads %THREADS% -b:a %AUDIOBITRATE%k %EXTRAPARAMS% -strict -2 "%~d1%~p1%~n1"%FILEPREFIX%.%OUTPUTEXT%
 del "%~d1%~p1%ffmpeg2pass-0.log"
 if "%VIDEOCODEC%" == "libx264" del "%~d1%~p1%ffmpeg2pass-0.log.mbtree"
 
