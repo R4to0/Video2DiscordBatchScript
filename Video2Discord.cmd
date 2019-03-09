@@ -88,7 +88,7 @@ echo.
 title %BASETITLE% (%PRL%)
 
 rem Codec
-rem TESTING: 3% of 8388213 bytes for overhead in x264
+rem TESTING: 3% of bytes for overhead in x264
 echo Codec:
 echo 1. WebM (VP9 + opus, recommended but slow encoding, CPU only)
 echo 2. MP4 (x264 + aac, a bit faster but less efficient, CPU only)
@@ -100,23 +100,26 @@ set /p "cdctyp=Your choice? "
 if %cdctyp% EQU 1 (
     set "VIDEOCODEC=libvpx-vp9"
     set "AUDIOCODEC=libopus"
-    set "EXTRAENCPARAMS=-deadline good"
+    set "EXTRAENCPARAMS=-deadline good -crf 0"
     set "OUTPUTEXT=webm"
+	if !THREADS! GEQ 2 set "ROWMT=-row-mt 1"
 )
 if %cdctyp% EQU 2 (
     set "VIDEOCODEC=libx264"
     set "AUDIOCODEC=aac"
-    set "EXTRAENCPARAMS=-profile:v high -level 4.1 -pix_fmt yuv420p -preset veryslow -movflags +faststart"
+    set "EXTRAENCPARAMS=-x264opts opencl -profile:v high -level 4.1 -pix_fmt yuv420p -preset veryslow -movflags +faststart"
     set "OUTPUTEXT=mp4"
-    set "OVERHEAD=251646"
+    if !acctype! EQU 1 set "OVERHEAD=251646"
+	if !acctype! EQU 2 set "OVERHEAD=1572849"
 )
-if %cdctyp% EQU 3 (
-    set "VIDEOCODEC=h264_amf"
-    set "AUDIOCODEC=aac"
-    set "EXTRAENCPARAMS=-profile:v high -level 4.1 -pix_fmt yuv420p -quality quality -coder cabac -rc cbr -movflags +faststart"
-    set "OUTPUTEXT=mp4"
-    set "OVERHEAD=251646"
-)
+rem if %cdctyp% EQU 3 (
+rem     set "VIDEOCODEC=h264_amf"
+rem     set "AUDIOCODEC=aac"
+rem     set "EXTRAENCPARAMS=-profile:v high -level 4.1 -pix_fmt yuv420p -quality quality -coder cabac -rc cbr -movflags +faststart"
+rem     set "OUTPUTEXT=mp4"
+rem     if !acctype! EQU 1 set "OVERHEAD=335528"
+rem 	if !acctype! EQU 2 set "OVERHEAD=1572849"
+rem )
 rem if %cdctyp% EQU 4 (
 rem     set "VIDEOCODEC=h264_nvenc"
 rem     set "AUDIOCODEC=aac"
@@ -128,7 +131,7 @@ if %cdctyp% LEQ 0 (
     echo Invalid option specified. Try again...
     goto :codecsel
 )
-if %cdctyp% GEQ 4 (
+if %cdctyp% GEQ 3 (
     echo Invalid option specified. Try again...
     goto :codecsel
 )
@@ -241,8 +244,8 @@ rem -strict Bypass encoding standards
 rem -f Force format
 rem %~d1 System Drive letter, %~p1 file path, %~n1 file name without extension
 :start
-start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -map_metadata -1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 1 %EXTRAENCPARAMS% -an -threads %THREADS% -strict -2  -f %OUTPUTEXT% NUL && ^
-start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel d3d11va %STARTTIME% %ENDTIME% -i %1 -map_metadata -1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 2 %EXTRAENCPARAMS% -c:a %AUDIOCODEC% -threads %THREADS% -b:a %AUDIOBITRATE%k %EXTRAPARAMS% -strict -2 "%~d1%~p1%~n1"%FILEPREFIX%.%OUTPUTEXT%
+start /b /wait /%PRIORITY% "" %ENCODER% -y -hwaccel auto %STARTTIME% %ENDTIME% -i %1 -map_metadata -1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 1 %EXTRAENCPARAMS% -an -threads %THREADS% %ROWMT% -strict -2  -f %OUTPUTEXT% NUL && ^
+start /b /wait /%PRIORITY% "" %ENCODER% -n -hwaccel auto %STARTTIME% %ENDTIME% -i %1 -map_metadata -1 -c:v %VIDEOCODEC% -b:v %VIDEOBITRATE%k %RESOLUTION% -pass 2 %EXTRAENCPARAMS% -c:a %AUDIOCODEC% -threads %THREADS% %ROWMT% -b:a %AUDIOBITRATE%k %EXTRAPARAMS% -strict -2 "%~d1%~p1%~n1"%FILEPREFIX%.%OUTPUTEXT%
 del "%~d1%~p1%ffmpeg2pass-0.log"
 if "%VIDEOCODEC%" == "libx264" del "%~d1%~p1%ffmpeg2pass-0.log.mbtree"
 
