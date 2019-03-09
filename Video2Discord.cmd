@@ -92,7 +92,7 @@ rem TESTING: 3% of bytes for overhead in x264
 echo Codec:
 echo 1. WebM (VP9 + opus, recommended but slow encoding, CPU only)
 echo 2. MP4 (x264 + aac, a bit faster but less efficient, CPU only)
-echo 3. AMD GPU encoding MP4 (h264 + aac, VCE cards only, faster, inefficient)
+rem echo 3. AMD GPU encoding MP4 (h264 + aac, VCE cards only, faster, inefficient)
 rem echo 4. NVIDIA GPU encoding MP4 (NVENC cards only, not tested)
 echo.
 :codecsel
