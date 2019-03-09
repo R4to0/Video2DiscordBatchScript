@@ -1,0 +1,2 @@
+# CRLF line for these files
+*.cmd text eol=crlf
